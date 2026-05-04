@@ -14,9 +14,15 @@ name: Op1
 on:
   repository_dispatch:
   workflow_dispatch:
+    inputs:
+      ssh_debug:
+        description: '启用 SSH 调试模式（连接后自动继续）'
+        required: false
+        default: false
+        type: boolean  
 
 env:
-  REPO_URL: https://github.com/openwrt/openwrt
+  REPO_URL: https://github.com/skycn119/openwrt
   REPO_BRANCH: openwrt-25.12
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config1
@@ -74,9 +80,9 @@ jobs:
         run: |
           [ -e files ] && mv files openwrt/files
           [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-          chmod +x $DIY_P2_SH
-          cd openwrt
-          $GITHUB_WORKSPACE/$DIY_P2_SH    
+          # chmod +x $DIY_P2_SH
+          # cd openwrt
+          # $GITHUB_WORKSPACE/$DIY_P2_SH    
 
       - name: Download package
         id: package
@@ -86,7 +92,23 @@ jobs:
           make download -j8
           find dl -size -1024c -exec ls -l {} \;
           find dl -size -1024c -exec rm -f {} \;
-    
+
+      - name: copy ppp
+        run: rm -rf openwrt/package/network/services/ppp && cp -r ppp openwrt/package/network/services/
+          
+      # ========== 新增 SSH 调试步骤 ==========
+      # 仅在手动触发且勾选 ssh_debug 时运行
+      # 会输出 tmate SSH 连接地址，断开连接后工作流自动继续
+      - name: SSH Debug (tmate)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.ssh_debug == 'true'
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true   # 仅允许触发者连接（安全）
+          # 可选：设置超时时间（分钟），默认无限制
+          timeout-minutes: 60
+
+      # =====================================
+     
       - name: Compile the firmware
         id: compile
         run: |
