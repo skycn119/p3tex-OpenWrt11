@@ -9,7 +9,7 @@
 # See /LICENSE for more information.
 #
 
-name: Op1bak
+name: Opbak
 
 on:
   repository_dispatch:
