@@ -24,6 +24,7 @@ echo "Current directory: $(pwd)"  # 调试用，可删除
 
 # 创建 files 目录层级
 mkdir -p files/usr/sbin
+mkdir -p files/lib/netifd/proto
 
 cp "$GITHUB_WORKSPACE/pppd" files/usr/sbin/pppd
 chmod +x files/usr/sbin/pppd
